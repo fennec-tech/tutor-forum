@@ -2,10 +2,16 @@ FROM docker.io/ruby:2.5.7-slim-stretch
 MAINTAINER Overhang.IO <contact@overhang.io>
 
 ENV DEBIAN_FRONTEND=noninteractive
+{% if APT_PROXY -%}
+RUN echo 'Acquire::{{ APT_PROXY | url_part('scheme') }}::Proxy "{{ APT_PROXY }}";' \
+    > /etc/apt/apt.conf.d/00proxy 
+{%- endif %}
 RUN apt update && \
   apt upgrade -y && \
   apt install -y git wget autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm-dev
-
+{% if APT_PROXY -%}
+RUN rm /etc/apt/apt.conf.d/00proxy
+{%- endif %}
 # Install dockerize to wait for mongodb/elasticsearch availability
 ARG DOCKERIZE_VERSION=v0.6.1
 RUN wget -O /tmp/dockerize.tar.gz https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
